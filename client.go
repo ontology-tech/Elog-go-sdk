@@ -1,4 +1,4 @@
-package client
+package sdk
 
 import (
 	"encoding/json"
@@ -9,8 +9,6 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/elog-go-sdk/mq"
-	"github.com/elog-go-sdk/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/streadway/amqp"
 )
@@ -19,11 +17,11 @@ type ElogClient struct {
 	addr string // for example: "http://127.0.0.1:8081"
 	did  string //
 	// mqAddr string  for example: amqp://admin:kk123456@localhost:5673/
-	consumer *mq.Consumer
+	consumer *Consumer
 }
 
 func NewElogClient(addr string, did string, mqAddr string) *ElogClient {
-	consumer := mq.NewConsumer(mqAddr)
+	consumer := NewConsumer(mqAddr)
 	return &ElogClient{
 		addr:     addr,
 		did:      did,
@@ -34,7 +32,7 @@ func NewElogClient(addr string, did string, mqAddr string) *ElogClient {
 func (client *ElogClient) Register(wallet string) error {
 	valid := judgeAddressIsVaild(wallet)
 	if !valid {
-		return utils.ErrAddressFormatter
+		return ErrAddressFormatter
 	}
 	form := make(url.Values)
 	form.Add("wallet", wallet)
@@ -43,7 +41,7 @@ func (client *ElogClient) Register(wallet string) error {
 		return err
 	}
 	if resp.StatusCode == http.StatusInternalServerError {
-		return utils.ErrInteralServer
+		return ErrInteralServer
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		return errors.New(resp.Status)
@@ -64,7 +62,7 @@ func(client *ElogClient) Restart() (map[string]<-chan amqp.Delivery, error) {
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusInternalServerError {
-		return nil, utils.ErrInteralServer
+		return nil, ErrInteralServer
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		return nil, errors.New(resp.Status)
@@ -90,17 +88,17 @@ func(client *ElogClient) Restart() (map[string]<-chan amqp.Delivery, error) {
 	return topicsChan, nil
 }
 
-func (client *ElogClient) UploadContract(chain string, path string, address string, contractType utils.ContractType) (<-chan amqp.Delivery, error) {
+func (client *ElogClient) UploadContract(chain string, path string, address string, contractType ContractType) (<-chan amqp.Delivery, error) {
 	valid := judgeAddressIsVaild(address)
 	if !valid {
-		return nil, utils.ErrAddressFormatter
+		return nil, ErrAddressFormatter
 	}
-	valid = utils.Types(contractType)
+	valid = Types(contractType)
 	if !valid {
-		return nil, utils.ErrNotSupportContractType
+		return nil, ErrNotSupportContractType
 	}
 	content := []byte{}
-	if contractType == utils.OTHER {
+	if contractType == OTHER {
 		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
 		if err != nil {
 			return nil, err
@@ -121,7 +119,7 @@ func (client *ElogClient) UploadContract(chain string, path string, address stri
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusInternalServerError {
-		return nil, utils.ErrInteralServer
+		return nil, ErrInteralServer
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		return nil, errors.New(resp.Status)
@@ -130,7 +128,7 @@ func (client *ElogClient) UploadContract(chain string, path string, address stri
 		topic := client.did + common.HexToAddress(address).Hex()
 		topicChan, err := client.consumer.RegisterTopic(topic)
 		if err != nil {
-			return nil, utils.ErrRegisterTopic
+			return nil, ErrRegisterTopic
 		}
 		return topicChan, nil
 	}
@@ -149,7 +147,7 @@ func (client *ElogClient) SubscribeEvents(address string, names []string) error 
 		return err
 	}
 	if resp.StatusCode == http.StatusInternalServerError {
-		return utils.ErrInteralServer
+		return ErrInteralServer
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		return errors.New(resp.Status)
@@ -166,7 +164,7 @@ func (client *ElogClient) RemoveContract(addr string) error {
 		return err
 	}
 	if resp.StatusCode == http.StatusInternalServerError {
-		return utils.ErrInteralServer
+		return ErrInteralServer
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		return errors.New(resp.Status)
@@ -187,7 +185,7 @@ func (client *ElogClient) UnSubscribeEvents(addr string, names []string) error {
 		return err
 	}
 	if resp.StatusCode == http.StatusInternalServerError {
-		return utils.ErrInteralServer
+		return ErrInteralServer
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		return errors.New(resp.Status)

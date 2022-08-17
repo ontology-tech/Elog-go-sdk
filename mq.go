@@ -1,9 +1,8 @@
-package mq
+package sdk
 
 import (
 	"errors"
 
-	"github.com/elog-go-sdk/utils"
 	"github.com/streadway/amqp"
 )
 
@@ -33,7 +32,7 @@ func NewConsumer(addr string) *Consumer {
 // one contract get one channel
 func (consumer *Consumer) RegisterTopic(topic string) (<-chan amqp.Delivery, error) {
 	if _, ok := consumer.topics[topic]; ok {
-		return nil, utils.ErrTopicHasRegistered
+		return nil, ErrTopicHasRegistered
 	}
 	queue, err := consumer.channel.QueueDeclare(topic, true, false, false, false, nil)
 	if err != nil{
