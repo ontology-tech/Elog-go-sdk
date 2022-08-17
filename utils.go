@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 )
 
@@ -40,4 +41,14 @@ func Types(contractType string) bool {
 		return true
 	}
 	return false
+}
+
+func HexToDec(num string) int64 {
+    val := num[2:]
+    
+    n, err := strconv.ParseInt(val, 16, 32)
+    if err != nil {
+        panic(err)
+    }
+   return n
 }
