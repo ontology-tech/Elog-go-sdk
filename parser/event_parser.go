@@ -1,17 +1,18 @@
-package sdk
+package parser
 
 import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/elog-go-sdk/utils"
 )
 
 var SysEventParser = &EventParser{}
 
 type EventParser struct {}
 
-func (parser *EventParser) Parser(contractAbi abi.ABI, event Event) (map[string]interface{}, error) {
+func (parser *EventParser) Parser(contractAbi abi.ABI, event utils.Event) (map[string]interface{}, error) {
 	abiEvent, ok := contractAbi.Events[event.Name]
 	if !ok {
-		return nil, ErrContractNotHaveEvent
+		return nil, utils.ErrContractNotHaveEvent
 	}
 	params := abiEvent.Inputs
 	data, err := contractAbi.Unpack(event.Name, event.Data)

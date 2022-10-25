@@ -11,17 +11,19 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/streadway/amqp"
+	"github.com/elog-go-sdk/utils"
+	"github.com/elog-go-sdk/mq"
 )
 
 type ElogClient struct {
 	addr string // for example: "http://127.0.0.1:8081"
 	did  string //
 	// mqAddr string  for example: amqp://admin:kk123456@localhost:5673/
-	consumer *Consumer
+	consumer *mq.Consumer
 }
 
 func NewElogClient(addr string, did string, mqAddr string) *ElogClient {
-	consumer := NewConsumer(mqAddr)
+	consumer := mq.NewConsumer(mqAddr)
 	return &ElogClient{
 		addr:     addr,
 		did:      did,
@@ -32,7 +34,7 @@ func NewElogClient(addr string, did string, mqAddr string) *ElogClient {
 func (client *ElogClient) Register(wallet string) error {
 	valid := judgeAddressIsVaild(wallet)
 	if !valid {
-		return ErrAddressFormatter
+		return utils.ErrAddressFormatter
 	}
 	form := make(url.Values)
 	form.Add("wallet", wallet)
@@ -41,7 +43,7 @@ func (client *ElogClient) Register(wallet string) error {
 		return err
 	}
 	if resp.StatusCode == http.StatusInternalServerError {
-		return ErrInteralServer
+		return utils.ErrInteralServer
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		return errors.New(resp.Status)
@@ -62,7 +64,7 @@ func(client *ElogClient) Restart() (map[string]<-chan amqp.Delivery, error) {
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusInternalServerError {
-		return nil, ErrInteralServer
+		return nil, utils.ErrInteralServer
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		return nil, errors.New(resp.Status)
@@ -88,17 +90,17 @@ func(client *ElogClient) Restart() (map[string]<-chan amqp.Delivery, error) {
 	return topicsChan, nil
 }
 
-func (client *ElogClient) UploadContract(chain string, path string, address string, contractType ContractType) (<-chan amqp.Delivery, error) {
+func (client *ElogClient) UploadContract(chain string, path string, address string, contractType utils.ContractType) (<-chan amqp.Delivery, error) {
 	valid := judgeAddressIsVaild(address)
 	if !valid {
-		return nil, ErrAddressFormatter
+		return nil, utils.ErrAddressFormatter
 	}
-	valid = Types(contractType)
+	valid = utils.Types(contractType)
 	if !valid {
-		return nil, ErrNotSupportContractType
+		return nil, utils.ErrNotSupportContractType
 	}
 	content := []byte{}
-	if contractType == OTHER {
+	if contractType == utils.OTHER {
 		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
 		if err != nil {
 			return nil, err
@@ -119,7 +121,7 @@ func (client *ElogClient) UploadContract(chain string, path string, address stri
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusInternalServerError {
-		return nil, ErrInteralServer
+		return nil, utils.ErrInteralServer
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		return nil, errors.New(resp.Status)
@@ -128,7 +130,7 @@ func (client *ElogClient) UploadContract(chain string, path string, address stri
 		topic := client.did + common.HexToAddress(address).Hex()
 		topicChan, err := client.consumer.RegisterTopic(topic)
 		if err != nil {
-			return nil, ErrRegisterTopic
+			return nil, utils.ErrRegisterTopic
 		}
 		return topicChan, nil
 	}
@@ -147,7 +149,7 @@ func (client *ElogClient) SubscribeEvents(address string, names []string) error 
 		return err
 	}
 	if resp.StatusCode == http.StatusInternalServerError {
-		return ErrInteralServer
+		return utils.ErrInteralServer
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		return errors.New(resp.Status)
@@ -164,7 +166,7 @@ func (client *ElogClient) RemoveContract(addr string) error {
 		return err
 	}
 	if resp.StatusCode == http.StatusInternalServerError {
-		return ErrInteralServer
+		return utils.ErrInteralServer
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		return errors.New(resp.Status)
@@ -185,7 +187,7 @@ func (client *ElogClient) UnSubscribeEvents(addr string, names []string) error {
 		return err
 	}
 	if resp.StatusCode == http.StatusInternalServerError {
-		return ErrInteralServer
+		return utils.ErrInteralServer
 	}
 	if resp.StatusCode == http.StatusBadRequest {
 		return errors.New(resp.Status)
