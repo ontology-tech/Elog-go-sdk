@@ -9,10 +9,11 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/streadway/amqp"
-	"github.com/elog-go-sdk/utils"
 	"github.com/elog-go-sdk/mq"
+	"github.com/elog-go-sdk/utils"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/spf13/cast"
+	"github.com/streadway/amqp"
 )
 
 type ElogClient struct {
@@ -116,6 +117,59 @@ func (client *ElogClient) UploadContract(chain string, path string, address stri
 	form.Add("abi", string(content))
 	form.Add("type", contractType)
 	form.Add("address", address)
+	resp, err := http.PostForm(client.addr + "/upload", form)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusInternalServerError {
+		return nil, utils.ErrInteralServer
+	}
+	if resp.StatusCode == http.StatusBadRequest {
+		return nil, errors.New(resp.Status)
+	}
+	if resp.StatusCode == http.StatusOK {
+		topic := client.did + common.HexToAddress(address).Hex()
+		topicChan, err := client.consumer.RegisterTopic(topic)
+		if err != nil {
+			return nil, utils.ErrRegisterTopic
+		}
+		return topicChan, nil
+	}
+	return nil, nil
+}
+
+func (client *ElogClient) ChaseBlock(chain string, path string, 
+	address string, contractType utils.ContractType, 
+	startBlock uint64, eventsName []string) (<-chan amqp.Delivery, error) {
+	valid := judgeAddressIsVaild(address)
+	if !valid {
+		return nil, utils.ErrAddressFormatter
+	}
+	valid = utils.Types(contractType)
+	if !valid {
+		return nil, utils.ErrNotSupportContractType
+	}
+	content := []byte{}
+	if contractType == utils.OTHER {
+		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
+		if err != nil {
+			return nil, err
+		}
+		content, err = ioutil.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+	}
+	form := make(url.Values)
+	form.Add("chain", chain)
+	form.Add("did", client.did)
+	form.Add("abi", string(content))
+	form.Add("type", contractType)
+	form.Add("address", address)
+	form.Add("startBlock", cast.ToString(startBlock))
+	for _, name := range eventsName {
+		form.Add("names", name)
+	}
 	resp, err := http.PostForm(client.addr + "/upload", form)
 	if err != nil {
 		return nil, err
