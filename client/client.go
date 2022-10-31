@@ -170,7 +170,7 @@ func (client *ElogClient) ChaseBlock(chain string, path string,
 	for _, name := range eventsName {
 		form.Add("names", name)
 	}
-	resp, err := http.PostForm(client.addr + "/upload", form)
+	resp, err := http.PostForm(client.addr + "/chase", form)
 	if err != nil {
 		return nil, err
 	}

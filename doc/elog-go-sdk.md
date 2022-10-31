@@ -44,3 +44,37 @@ SysEventParser.Parser(contractAbi, event)得到一个map，键为事件中的参
 client := NewElogClient("http://127.0.0.1:8081", "did:etho:aa181b97eC1989bD03061CaB7924797126B526C1", "amqp://admin:kk123456@localhost:5673/") 
 mqChans := client.Restart() // 返回的结果为map 键为用户注册的合约地址，值为mq通道，使用上面的方法从通道中拿取数据进行处理
 ```
+
+```
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+
+	"github.com/orange-protocol/Elog-go-sdk/client"
+	"github.com/orange-protocol/Elog-go-sdk/utils"
+)
+
+func main() {
+	client := client.NewElogClient("http://127.0.0.1:8081", "", "amqp://admin:kk123456@localhost:5673/")
+	err := client.Register("0xaa181b97eC1989bD03061CaB7924797126B526C1")
+	if err != nil {
+		panic(err)
+	}
+	mqChan, err := client.ChaseBlock("eth", "", "0xdAC17F958D2ee523a2206206994597C13D831ec7", utils.ERC20, 15866379, []string{"Transfer"})
+	if err != nil {
+		panic(err)
+	}
+	for msg := range mqChan {
+		event := &utils.Event{}
+        err := json.Unmarshal(msg.Body, event)
+		if err != nil {
+			log.Println(err)
+		} else {
+			fmt.Println(event.Address, event.Name, event.Height)
+		}
+	}
+}
+```
