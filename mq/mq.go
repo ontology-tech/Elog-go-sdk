@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/streadway/amqp"
-	"github.com/elog-go-sdk/utils"
+	"github.com/orange-protocol/elog-go-sdk/utils"
 )
 
 type Consumer struct {

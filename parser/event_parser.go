@@ -2,7 +2,7 @@ package parser
 
 import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/elog-go-sdk/utils"
+	"github.com/orange-protocol/elog-go-sdk/utils"
 )
 
 var SysEventParser = &EventParser{}
