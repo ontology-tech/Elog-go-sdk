@@ -9,8 +9,8 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/orange-protocol/elog-go-sdk/mq"
-	"github.com/orange-protocol/elog-go-sdk/utils"
+	"github.com/orange-protocol/Elog-go-sdk/mq"
+	"github.com/orange-protocol/Elog-go-sdk/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cast"
 	"github.com/streadway/amqp"
