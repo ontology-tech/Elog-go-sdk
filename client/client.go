@@ -75,18 +75,18 @@ func(client *ElogClient) Restart() (map[string]<-chan amqp.Delivery, error) {
 		return nil, nil
 	}
 	topicsChan := make(map[string]<-chan amqp.Delivery)
-	contracts := make([]string, 0, 10)
-	err = json.Unmarshal(body, &contracts)
+	contractsInfo := make([]*utils.ContractInfo, 0)
+	err = json.Unmarshal(body, &contractsInfo)
 	if err != nil {
 		return nil, err
 	}
-	for _, contract := range contracts {
-		topic := client.did + contract
+	for _, contractInfo := range contractsInfo {
+		topic := client.did + contractInfo.Chain + contractInfo.Address
 		topicChan, err := client.consumer.RegisterTopic(topic)
 		if err != nil {
 			return nil, err
 		}
-		topicsChan[contract] = topicChan
+		topicsChan[contractInfo.Address] = topicChan
 	}
 	return topicsChan, nil
 }
@@ -128,7 +128,7 @@ func (client *ElogClient) UploadContract(chain string, path string, address stri
 		return nil, errors.New(resp.Status)
 	}
 	if resp.StatusCode == http.StatusOK {
-		topic := client.did + common.HexToAddress(address).Hex()
+		topic := client.did + chain + common.HexToAddress(address).Hex()
 		topicChan, err := client.consumer.RegisterTopic(topic)
 		if err != nil {
 			return nil, utils.ErrRegisterTopic
@@ -181,7 +181,7 @@ func (client *ElogClient) ChaseBlock(chain string, path string,
 		return nil, errors.New(resp.Status)
 	}
 	if resp.StatusCode == http.StatusOK {
-		topic := client.did + common.HexToAddress(address).Hex()
+		topic := client.did + chain + common.HexToAddress(address).Hex()
 		topicChan, err := client.consumer.RegisterTopic(topic)
 		if err != nil {
 			return nil, utils.ErrRegisterTopic

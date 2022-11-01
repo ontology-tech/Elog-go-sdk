@@ -34,6 +34,11 @@ const (
 	OTHER   ContractType = "OTHER"
 )
 
+type ContractInfo struct {
+	Address string `json:"address"`
+	Chain   string `json:"chain"`
+}
+
 func Types(contractType string) bool {
 	if strings.EqualFold(ERC20, contractType) ||
 		strings.EqualFold(ERC721, contractType) ||
