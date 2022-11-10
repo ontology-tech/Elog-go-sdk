@@ -13,7 +13,8 @@ type Event struct {
 	Name    string   `json:"name"`
 	Topics  []string `json:"topics"`
 	Data    []byte   `json:"data"`
-	Height  int64    `json:"height"`
+	Height  int64   `json:"height"`
+	BlockTime uint64 `json:"block_time"`
 }
 
 var (
