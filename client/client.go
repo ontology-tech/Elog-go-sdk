@@ -87,7 +87,7 @@ func (client *ElogClient) Restart() (map[string]<-chan amqp.Delivery, error) {
 
 func (client *ElogClient) UploadContract(chain string, path string, address string, contractType utils.ContractType) (<-chan amqp.Delivery, error) {
 	content := []byte{}
-	if contractType == utils.OTHER {
+	if contractType == utils.OTHER && chain != utils.NULS {
 		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
 		if err != nil {
 			return nil, err
@@ -128,7 +128,7 @@ func (client *ElogClient) ChaseBlock(chain string, path string,
 	address string, contractType utils.ContractType,
 	startBlock uint64, eventsName []string) (<-chan amqp.Delivery, error) {
 	content := []byte{}
-	if contractType == utils.OTHER {
+	if contractType == utils.OTHER && chain != utils.NULS {
 		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
 		if err != nil {
 			return nil, err

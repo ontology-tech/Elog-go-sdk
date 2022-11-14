@@ -34,6 +34,10 @@ const (
 	OTHER   ContractType = "OTHER"
 )
 
+type ChainType = string
+
+const NULS ChainType = "nuls"
+
 type ContractInfo struct {
 	Address string `json:"address"`
 	Chain   string `json:"chain"`
