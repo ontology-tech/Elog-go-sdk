@@ -7,9 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"regexp"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/orange-protocol/Elog-go-sdk/mq"
 	"github.com/orange-protocol/Elog-go-sdk/utils"
 	"github.com/spf13/cast"
@@ -33,10 +31,6 @@ func NewElogClient(addr string, did string, mqAddr string) *ElogClient {
 }
 
 func (client *ElogClient) Register(wallet string) error {
-	valid := judgeAddressIsVaild(wallet)
-	if !valid {
-		return utils.ErrAddressFormatter
-	}
 	form := make(url.Values)
 	form.Add("wallet", wallet)
 	resp, err := http.PostForm(client.addr+"/register", form)
@@ -92,14 +86,6 @@ func (client *ElogClient) Restart() (map[string]<-chan amqp.Delivery, error) {
 }
 
 func (client *ElogClient) UploadContract(chain string, path string, address string, contractType utils.ContractType) (<-chan amqp.Delivery, error) {
-	valid := judgeAddressIsVaild(address)
-	if !valid {
-		return nil, utils.ErrAddressFormatter
-	}
-	valid = utils.Types(contractType)
-	if !valid {
-		return nil, utils.ErrNotSupportContractType
-	}
 	content := []byte{}
 	if contractType == utils.OTHER {
 		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
@@ -128,7 +114,7 @@ func (client *ElogClient) UploadContract(chain string, path string, address stri
 		return nil, errors.New(resp.Status)
 	}
 	if resp.StatusCode == http.StatusOK {
-		topic := client.did + chain + common.HexToAddress(address).Hex()
+		topic := client.did + chain + address
 		topicChan, err := client.consumer.RegisterTopic(topic)
 		if err != nil {
 			return nil, utils.ErrRegisterTopic
@@ -141,14 +127,6 @@ func (client *ElogClient) UploadContract(chain string, path string, address stri
 func (client *ElogClient) ChaseBlock(chain string, path string,
 	address string, contractType utils.ContractType,
 	startBlock uint64, eventsName []string) (<-chan amqp.Delivery, error) {
-	valid := judgeAddressIsVaild(address)
-	if !valid {
-		return nil, utils.ErrAddressFormatter
-	}
-	valid = utils.Types(contractType)
-	if !valid {
-		return nil, utils.ErrNotSupportContractType
-	}
 	content := []byte{}
 	if contractType == utils.OTHER {
 		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
@@ -181,7 +159,7 @@ func (client *ElogClient) ChaseBlock(chain string, path string,
 		return nil, errors.New(resp.Status)
 	}
 	if resp.StatusCode == http.StatusOK {
-		topic := client.did + chain + common.HexToAddress(address).Hex()
+		topic := client.did + chain + address
 		topicChan, err := client.consumer.RegisterTopic(topic)
 		if err != nil {
 			return nil, utils.ErrRegisterTopic
@@ -250,9 +228,4 @@ func (client *ElogClient) UnSubscribeEvents(chain string, addr string, names []s
 		return errors.New(resp.Status)
 	}
 	return nil
-}
-
-func judgeAddressIsVaild(address string) bool {
-	reg := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
-	return reg.MatchString(address)
 }

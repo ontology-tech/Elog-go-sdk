@@ -7,18 +7,17 @@ import (
 )
 
 type Event struct {
-	Chain   string   `json:"chain"`
-	Address string   `json:"address"`
-	TxHash  string   `json:"txHash"`
-	Name    string   `json:"name"`
-	Topics  []string `json:"topics"`
-	Data    []byte   `json:"data"`
-	Height  int64   `json:"height"`
-	BlockTime uint64 `json:"block_time"`
+	Chain     string   `json:"chain"`
+	Address   string   `json:"address"`
+	TxHash    string   `json:"txHash"`
+	Name      string   `json:"name"`
+	Topics    []string `json:"topics"`
+	Data      []byte   `json:"data"`
+	Height    int64    `json:"height"`
+	BlockTime uint64   `json:"block_time"`
 }
 
 var (
-	ErrAddressFormatter       = errors.New("address format error")
 	ErrInteralServer          = errors.New("internal server error")
 	ErrNotSupportContractType = errors.New("elog doesn't support the contract type")
 	ErrTopicHasRegistered     = errors.New("topic has been subscribed")
@@ -51,11 +50,11 @@ func Types(contractType string) bool {
 }
 
 func HexToDec(num string) int64 {
-    val := num[2:]
-    
-    n, err := strconv.ParseInt(val, 16, 32)
-    if err != nil {
-        panic(err)
-    }
-   return n
+	val := num[2:]
+
+	n, err := strconv.ParseInt(val, 16, 32)
+	if err != nil {
+		panic(err)
+	}
+	return n
 }
