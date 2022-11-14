@@ -9,9 +9,9 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/orange-protocol/Elog-go-sdk/mq"
 	"github.com/orange-protocol/Elog-go-sdk/utils"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cast"
 	"github.com/streadway/amqp"
 )
@@ -39,7 +39,7 @@ func (client *ElogClient) Register(wallet string) error {
 	}
 	form := make(url.Values)
 	form.Add("wallet", wallet)
-	resp, err := http.PostForm(client.addr + "/register" , form)
+	resp, err := http.PostForm(client.addr+"/register", form)
 	if err != nil {
 		return err
 	}
@@ -57,10 +57,10 @@ func (client *ElogClient) Register(wallet string) error {
 	return nil
 }
 
-func(client *ElogClient) Restart() (map[string]<-chan amqp.Delivery, error) {
+func (client *ElogClient) Restart() (map[string]<-chan amqp.Delivery, error) {
 	form := make(url.Values)
 	form.Add("did", client.did)
-	resp, err := http.PostForm(client.addr + "/querycontracts", form)
+	resp, err := http.PostForm(client.addr+"/querycontracts", form)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (client *ElogClient) UploadContract(chain string, path string, address stri
 	form.Add("abi", string(content))
 	form.Add("type", contractType)
 	form.Add("address", address)
-	resp, err := http.PostForm(client.addr + "/upload", form)
+	resp, err := http.PostForm(client.addr+"/upload", form)
 	if err != nil {
 		return nil, err
 	}
@@ -138,8 +138,8 @@ func (client *ElogClient) UploadContract(chain string, path string, address stri
 	return nil, nil
 }
 
-func (client *ElogClient) ChaseBlock(chain string, path string, 
-	address string, contractType utils.ContractType, 
+func (client *ElogClient) ChaseBlock(chain string, path string,
+	address string, contractType utils.ContractType,
 	startBlock uint64, eventsName []string) (<-chan amqp.Delivery, error) {
 	valid := judgeAddressIsVaild(address)
 	if !valid {
@@ -170,7 +170,7 @@ func (client *ElogClient) ChaseBlock(chain string, path string,
 	for _, name := range eventsName {
 		form.Add("names", name)
 	}
-	resp, err := http.PostForm(client.addr + "/chase", form)
+	resp, err := http.PostForm(client.addr+"/chase", form)
 	if err != nil {
 		return nil, err
 	}
@@ -191,14 +191,15 @@ func (client *ElogClient) ChaseBlock(chain string, path string,
 	return nil, nil
 }
 
-func (client *ElogClient) SubscribeEvents(address string, names []string) error {
+func (client *ElogClient) SubscribeEvents(chain string, address string, names []string) error {
 	form := make(url.Values)
 	form.Add("did", client.did)
+	form.Add("chain", chain)
 	form.Add("address", address)
 	for _, name := range names {
 		form.Add("names", name)
 	}
-	resp, err := http.PostForm(client.addr + "/subscribe", form)
+	resp, err := http.PostForm(client.addr+"/subscribe", form)
 	if err != nil {
 		return err
 	}
@@ -211,11 +212,12 @@ func (client *ElogClient) SubscribeEvents(address string, names []string) error 
 	return nil
 }
 
-func (client *ElogClient) RemoveContract(addr string) error {
+func (client *ElogClient) RemoveContract(chain string, addr string) error {
 	form := make(url.Values)
 	form.Add("did", client.did)
+	form.Add("chain", chain)
 	form.Add("address", addr)
-	resp, err := http.PostForm(client.addr + "/remove", form)
+	resp, err := http.PostForm(client.addr+"/remove", form)
 	if err != nil {
 		return err
 	}
@@ -229,14 +231,15 @@ func (client *ElogClient) RemoveContract(addr string) error {
 
 }
 
-func (client *ElogClient) UnSubscribeEvents(addr string, names []string) error {
+func (client *ElogClient) UnSubscribeEvents(chain string, addr string, names []string) error {
 	form := make(url.Values)
 	form.Add("did", client.did)
+	form.Add("chain", chain)
 	form.Add("address", addr)
 	for _, name := range names {
 		form.Add("names", name)
 	}
-	resp, err := http.PostForm(client.addr + "/unsubsribe", form)
+	resp, err := http.PostForm(client.addr+"/unsubsribe", form)
 	if err != nil {
 		return err
 	}
