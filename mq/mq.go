@@ -3,30 +3,30 @@ package mq
 import (
 	"errors"
 
-	"github.com/streadway/amqp"
 	"github.com/orange-protocol/Elog-go-sdk/utils"
+	"github.com/streadway/amqp"
 )
 
 type Consumer struct {
-	conn *amqp.Connection
+	conn    *amqp.Connection
 	channel *amqp.Channel
-	topics map[string]struct{}
+	topics  map[string]struct{}
 }
 
 func NewConsumer(addr string) *Consumer {
 	conn, err := amqp.Dial(addr)
-	if err != nil{
+	if err != nil {
 		panic("get rabbit client conn fail")
 	}
 	//创建一个Channel，所有的连接都是通过Channel管理的
 	channel, err := conn.Channel()
-	if err != nil{
+	if err != nil {
 		panic("get rabbit client channel fail")
 	}
 	return &Consumer{
-		conn: conn,
+		conn:    conn,
 		channel: channel,
-		topics: make(map[string]struct{}),
+		topics:  make(map[string]struct{}),
 	}
 }
 
@@ -36,7 +36,7 @@ func (consumer *Consumer) RegisterTopic(topic string) (<-chan amqp.Delivery, err
 		return nil, utils.ErrTopicHasRegistered
 	}
 	queue, err := consumer.channel.QueueDeclare(topic, true, false, false, false, nil)
-	if err != nil{
+	if err != nil {
 		return nil, errors.New("get queue fail")
 	}
 	msgs, err := consumer.channel.Consume(queue.Name, "", false, false, false, false, nil)
@@ -51,4 +51,8 @@ func (consumer *Consumer) UnregisterTopic(topic string) {
 	if _, ok := consumer.topics[topic]; ok {
 		delete(consumer.topics, topic)
 	}
+}
+
+func (consumer *Consumer) Ack(msg amqp.Delivery) error {
+	return msg.Ack(false)
 }

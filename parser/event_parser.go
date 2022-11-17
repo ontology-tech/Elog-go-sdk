@@ -7,7 +7,7 @@ import (
 
 var SysEventParser = &EventParser{}
 
-type EventParser struct {}
+type EventParser struct{}
 
 func (parser *EventParser) Parser(contractAbi abi.ABI, event utils.Event) (map[string]interface{}, error) {
 	abiEvent, ok := contractAbi.Events[event.Name]
@@ -19,7 +19,7 @@ func (parser *EventParser) Parser(contractAbi abi.ABI, event utils.Event) (map[s
 	if err != nil {
 		return nil, err
 	}
-    result := make(map[string]interface{}) 
+	result := make(map[string]interface{})
 	for i := 0; i < len(event.Topics)-1; i++ {
 		result[params[i].Name] = event.Topics[i+1]
 	}

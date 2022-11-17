@@ -250,3 +250,7 @@ func (client *ElogClient) UnSubscribeEvents(chain string, addr string, names []s
 	}
 	return nil
 }
+
+func (client *ElogClient) Ack(msg amqp.Delivery) error {
+	return client.consumer.Ack(msg)
+}
