@@ -209,6 +209,27 @@ func (client *ElogClient) RemoveContract(chain string, addr string) error {
 
 }
 
+func (client *ElogClient) GetTimestamp(chain string, height int64) (int64, error) {
+	form := make(url.Values)
+	form.Add("chain", chain)
+	form.Add("height", cast.ToString(height))
+	resp, err := http.PostForm(client.addr+"/getTime", form)
+	if err != nil {
+		return 0, err
+	}
+	if resp.StatusCode == http.StatusInternalServerError {
+		return 0, utils.ErrInteralServer
+	}
+	if resp.StatusCode == http.StatusBadRequest {
+		return 0, errors.New(resp.Status)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0 ,err
+	}
+	return cast.ToInt64(string(body)), nil
+}
+
 func (client *ElogClient) UnSubscribeEvents(chain string, addr string, names []string) error {
 	form := make(url.Values)
 	form.Add("did", client.did)

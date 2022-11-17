@@ -39,7 +39,7 @@ func (consumer *Consumer) RegisterTopic(topic string) (<-chan amqp.Delivery, err
 	if err != nil{
 		return nil, errors.New("get queue fail")
 	}
-	msgs, err := consumer.channel.Consume(queue.Name, "", true, false, false, false, nil)
+	msgs, err := consumer.channel.Consume(queue.Name, "", false, false, false, false, nil)
 	if err != nil {
 		return nil, err
 	}
