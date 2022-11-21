@@ -53,8 +53,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/orange-protocol/Elog-go-sdk/client"
-	"github.com/orange-protocol/Elog-go-sdk/utils"
+	"github.com/ontology-tech/Elog-go-sdk/client"
+	"github.com/ontology-tech/Elog-go-sdk/utils"
 )
 
 func main() {

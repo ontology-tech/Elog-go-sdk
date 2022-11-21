@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/orange-protocol/Elog-go-sdk/mq"
-	"github.com/orange-protocol/Elog-go-sdk/utils"
+	"github.com/ontology-tech/Elog-go-sdk/mq"
+	"github.com/ontology-tech/Elog-go-sdk/utils"
 	"github.com/spf13/cast"
 	"github.com/streadway/amqp"
 )
@@ -225,7 +225,7 @@ func (client *ElogClient) GetTimestamp(chain string, height int64) (int64, error
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return 0 ,err
+		return 0, err
 	}
 	return cast.ToInt64(string(body)), nil
 }

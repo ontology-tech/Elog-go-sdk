@@ -1,4 +1,4 @@
-module github.com/orange-protocol/Elog-go-sdk
+module github.com/ontology-tech/Elog-go-sdk
 
 go 1.17
 

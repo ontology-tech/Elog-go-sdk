@@ -3,7 +3,7 @@ package mq
 import (
 	"errors"
 
-	"github.com/orange-protocol/Elog-go-sdk/utils"
+	"github.com/ontology-tech/Elog-go-sdk/utils"
 	"github.com/streadway/amqp"
 )
 
