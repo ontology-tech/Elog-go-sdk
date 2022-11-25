@@ -15,24 +15,27 @@ import (
 )
 
 type ElogClient struct {
-	addr string // for example: "http://127.0.0.1:8081"
-	did  string //
+	addr   string // for example: "http://127.0.0.1:8081"
+	wallet string //
 	// mqAddr string  for example: amqp://admin:kk123456@localhost:5673/
 	consumer *mq.Consumer
 }
 
-func NewElogClient(addr string, did string, mqAddr string) *ElogClient {
+func NewElogClient(addr string, wallet string, mqAddr string) *ElogClient {
 	consumer := mq.NewConsumer(mqAddr)
 	return &ElogClient{
 		addr:     addr,
-		did:      did,
+		wallet:   wallet,
 		consumer: consumer,
 	}
 }
 
-func (client *ElogClient) Register(wallet string) error {
+func (client *ElogClient) Register() error {
+	if client.wallet == "" {
+		panic("wallet is nil")
+	}
 	form := make(url.Values)
-	form.Add("wallet", wallet)
+	form.Add("wallet", client.wallet)
 	resp, err := http.PostForm(client.addr+"/register", form)
 	if err != nil {
 		return err
@@ -47,13 +50,13 @@ func (client *ElogClient) Register(wallet string) error {
 	if err != nil {
 		return err
 	}
-	client.did = string(did)
+	client.wallet = string(did)
 	return nil
 }
 
 func (client *ElogClient) Restart() (map[string]<-chan amqp.Delivery, error) {
 	form := make(url.Values)
-	form.Add("did", client.did)
+	form.Add("did", client.wallet)
 	resp, err := http.PostForm(client.addr+"/querycontracts", form)
 	if err != nil {
 		return nil, err
@@ -75,7 +78,7 @@ func (client *ElogClient) Restart() (map[string]<-chan amqp.Delivery, error) {
 		return nil, err
 	}
 	for _, contractInfo := range contractsInfo {
-		topic := client.did + contractInfo.Chain + contractInfo.Address
+		topic := client.wallet + contractInfo.Chain + contractInfo.Address
 		topicChan, err := client.consumer.RegisterTopic(topic)
 		if err != nil {
 			return nil, err
@@ -99,7 +102,7 @@ func (client *ElogClient) UploadContract(chain string, path string, address stri
 	}
 	form := make(url.Values)
 	form.Add("chain", chain)
-	form.Add("did", client.did)
+	form.Add("did", client.wallet)
 	form.Add("abi", string(content))
 	form.Add("type", contractType)
 	form.Add("address", address)
@@ -114,7 +117,7 @@ func (client *ElogClient) UploadContract(chain string, path string, address stri
 		return nil, errors.New(resp.Status)
 	}
 	if resp.StatusCode == http.StatusOK {
-		topic := client.did + chain + address
+		topic := client.wallet + chain + address
 		topicChan, err := client.consumer.RegisterTopic(topic)
 		if err != nil {
 			return nil, utils.ErrRegisterTopic
@@ -140,7 +143,7 @@ func (client *ElogClient) ChaseBlock(chain string, path string,
 	}
 	form := make(url.Values)
 	form.Add("chain", chain)
-	form.Add("did", client.did)
+	form.Add("did", client.wallet)
 	form.Add("abi", string(content))
 	form.Add("type", contractType)
 	form.Add("address", address)
@@ -159,7 +162,7 @@ func (client *ElogClient) ChaseBlock(chain string, path string,
 		return nil, errors.New(resp.Status)
 	}
 	if resp.StatusCode == http.StatusOK {
-		topic := client.did + chain + address
+		topic := client.wallet + chain + address
 		topicChan, err := client.consumer.RegisterTopic(topic)
 		if err != nil {
 			return nil, utils.ErrRegisterTopic
@@ -171,7 +174,7 @@ func (client *ElogClient) ChaseBlock(chain string, path string,
 
 func (client *ElogClient) SubscribeEvents(chain string, address string, names []string) error {
 	form := make(url.Values)
-	form.Add("did", client.did)
+	form.Add("did", client.wallet)
 	form.Add("chain", chain)
 	form.Add("address", address)
 	for _, name := range names {
@@ -192,7 +195,7 @@ func (client *ElogClient) SubscribeEvents(chain string, address string, names []
 
 func (client *ElogClient) RemoveContract(chain string, addr string) error {
 	form := make(url.Values)
-	form.Add("did", client.did)
+	form.Add("did", client.wallet)
 	form.Add("chain", chain)
 	form.Add("address", addr)
 	resp, err := http.PostForm(client.addr+"/remove", form)
@@ -232,7 +235,7 @@ func (client *ElogClient) GetTimestamp(chain string, height int64) (int64, error
 
 func (client *ElogClient) UnSubscribeEvents(chain string, addr string, names []string) error {
 	form := make(url.Values)
-	form.Add("did", client.did)
+	form.Add("did", client.wallet)
 	form.Add("chain", chain)
 	form.Add("address", addr)
 	for _, name := range names {
