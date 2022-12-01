@@ -34,6 +34,10 @@ const (
 	OTHER   ContractType = "OTHER"
 )
 
+const (
+	HeartBeatTicker int64 = 60 * 3
+)
+
 type ChainType = string
 
 const NULS ChainType = "nuls"

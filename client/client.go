@@ -1,12 +1,17 @@
 package client
 
 import (
+	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/ontology-tech/Elog-go-sdk/mq"
 	"github.com/ontology-tech/Elog-go-sdk/utils"
@@ -18,15 +23,18 @@ type ElogClient struct {
 	addr   string // for example: "http://127.0.0.1:8081"
 	wallet string //
 	// mqAddr string  for example: amqp://admin:kk123456@localhost:5673/
-	consumer *mq.Consumer
+	consumer      *mq.Consumer
+	heartbeatAddr string
+	cancel        context.CancelFunc
 }
 
-func NewElogClient(addr string, wallet string, mqAddr string) *ElogClient {
+func NewElogClient(addr string, wallet string, mqAddr string, heartbeatAddr string) *ElogClient {
 	consumer := mq.NewConsumer(mqAddr)
 	return &ElogClient{
-		addr:     addr,
-		wallet:   wallet,
-		consumer: consumer,
+		addr:          addr,
+		wallet:        wallet,
+		consumer:      consumer,
+		heartbeatAddr: heartbeatAddr,
 	}
 }
 
@@ -51,6 +59,14 @@ func (client *ElogClient) Register() error {
 		return err
 	}
 	client.wallet = string(did)
+	// start heartbeat
+	conn, err := net.Dial("tcp", client.heartbeatAddr)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	client.cancel = cancel
+	go client.heartbeat(conn, ctx)
 	return nil
 }
 
@@ -254,6 +270,31 @@ func (client *ElogClient) UnSubscribeEvents(chain string, addr string, names []s
 	return nil
 }
 
-func (client *ElogClient) Ack(msg amqp.Delivery) error {
-	return client.consumer.Ack(msg)
+func (client *ElogClient) Close() {
+	client.cancel()
 }
+
+func (client *ElogClient) heartbeat(conn net.Conn, ctx context.Context) {
+	ticker := time.NewTicker(time.Duration(10) * time.Second)
+	msg := client.wallet + "\n"
+	writer := bufio.NewWriter(conn)
+Loop:
+	for {
+		select {
+		case <-ticker.C:
+			_, err := writer.WriteString(msg)
+			if err != nil {
+				log.Println("conn WriteString fail", err)
+				break
+			} 
+			err = writer.Flush()
+			if err != nil {
+				log.Println("writer flush fail", err.Error())
+			}
+		case <-ctx.Done():
+			log.Println("conn close")
+			break Loop
+		}
+	}
+}
+
