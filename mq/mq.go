@@ -52,7 +52,3 @@ func (consumer *Consumer) UnregisterTopic(topic string) {
 		delete(consumer.topics, topic)
 	}
 }
-
-func (consumer *Consumer) Ack(msg amqp.Delivery) error {
-	return msg.Ack(false)
-}

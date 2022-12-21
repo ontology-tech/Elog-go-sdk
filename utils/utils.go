@@ -47,6 +47,11 @@ type ContractInfo struct {
 	Chain   string `json:"chain"`
 }
 
+type ElogResponse struct {
+	Result interface{} `json:"result"`
+	Error  string      `json:"error"`
+}
+
 func Types(contractType string) bool {
 	if strings.EqualFold(ERC20, contractType) ||
 		strings.EqualFold(ERC721, contractType) ||
